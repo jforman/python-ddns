@@ -1,0 +1,12 @@
+ManageDNS README
+=================
+
+This script strives to make it easy to manipulate
+BIND DNS zone records managed by DDNS.
+
+Core Requirements
+=================
+* Python
+* python-dnspython
+* BIND server using static keys for 
+  zone update authorization
