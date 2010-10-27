@@ -10,3 +10,31 @@ Core Requirements
 * python-dnspython
 * BIND server using static keys for 
   zone update authorization
+
+
+Modules
+==================
+
+keyutils
+========
+read_tsigkey: This will take as input a file containing the TSIG key stanza, and output the
+	      algorithm used and tsig secret keystring for dynamic updates.
+	Input: tsig keyfile, keyname
+	Output: key algorithm, tsig secret keystring
+
+
+Examples
+====================
+
+Reading key files:
+>>> import keyutils
+>>> keyutils.read_tsigkey("testkey.txt","rndc-test")
+algo: hmac-md5
+tsigsecret: foobarbazcoroflzomgbbq
+('hmac-md5', 'foobarbazcoroflzomgbbq')
+>>> keyutils.read_tsigkey("testnokey.txt","rndc-test")
+A problem was encountered opening your keyfile.
+1
+>>> keyutils.read_tsigkey("testkey.txt","rndc-testf")
+no key found
+1

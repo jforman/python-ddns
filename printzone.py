@@ -4,10 +4,21 @@ import dns.query
 import dns.zone
 import sys
 
-print "args: %s %s" % (sys.argv[1], sys.argv[2])
+from optparse import OptionParser
+
+parser = OptionParser()
+parser.add_option("--server", dest="dns_server",
+                  help="DNS server to query.",
+                  type="string")
+parser.add_option("--zone", dest="dns_zone",
+                  help="Zone to print.",
+                  type="string")
+
+(options, args) = parser.parse_args()
+
+print "Server: %s Zone: %s" % (options.dns_server, options.dns_zone)
 try:
-    z = dns.zone.from_xfr(dns.query.xfr(sys.argv[1], sys.argv[2]))
-    print "after transfer"
+    z = dns.zone.from_xfr(dns.query.xfr(options.dns_server, options.dns_zone))
     names = z.nodes.keys()
     names.sort()
     for n in names:
