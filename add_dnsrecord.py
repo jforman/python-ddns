@@ -12,6 +12,8 @@ import dns.update
 import re
 import sys
 
+import keyutils
+
 from optparse import OptionParser
 
 parser = OptionParser()
@@ -32,9 +34,10 @@ domain = re.search(r"(\w+).(.*)", options.fqdn).group(2)
 
 print "Host to be updated: %s, IP: %s, DNS Server: %s" % (options.fqdn, options.ip_address, options.dns_server)
 
-##  Add in this functionality (maybe as a module)
+(algorithm, tsigsecret) = keyutils.read_tsigkey("rdns.key","ddns-key")
+
 keyring = dns.tsigkeyring.from_text({
-     'ddns-key.' : "kzz766iy/JXF/rUkFuFSKQ=="
+     'ddns-key' : tsigsecret
 })
 
 update = dns.update.Update(domain, keyring = keyring)
