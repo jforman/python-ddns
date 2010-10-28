@@ -3,7 +3,6 @@
 import sys
 import re
 
-# If there is any sort of error, debating whether to just sys.exit(1) the whole thing.
 def read_tsigkey(tsigkeyfile,keyname):
     try:
         keyfile = open(tsigkeyfile)

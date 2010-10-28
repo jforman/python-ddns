@@ -2,10 +2,6 @@
 
 # Example: add_dnsrecord.py --fqdn host101.testzone.example.com --ip 10.30.0.101 --keyfile ddns.key --keyname ddns-key --server mydnsserver
 
-# Add functionality to specify the kind of record. A/CNAME/NS.
-# Add functionality to specify TTL.
-# Add functionality on whether to create a reverse PTR record.
-
 import dns.query
 import dns.tsigkeyring
 import dns.update
