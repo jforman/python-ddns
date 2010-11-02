@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-# Example: add_dnsrecord.py --fqdn host101.testzone.example.com --ip 10.30.0.101 --keyfile ddns.key --keyname ddns-key --server mydnsserver
+# Example: add_dnsrecord.py --fqdn host101.testzone.example.com --ip 10.30.0.101 --keyfile ddns.key --keyname ddns-key --server mydnsserver --reverse
 
 import dns.query
+import dns.reversename
 import dns.tsigkeyring
 import dns.update
 import re
@@ -25,10 +26,11 @@ parser.add_option("--keyfile", dest="key_file",
 parser.add_option("--keyname", dest="key_name",
                   help="TSIG key name to use for the DDNS update.",
                   type="string")
+parser.add_option("--reverse", action="store_true", default=False,
+                  help="Enable if you want to create a reverse PTR record.")
 parser.add_option("--server", dest="dns_server",
                   help="DNS server to query.",
                   type="string")
-
 
 (options, args) = parser.parse_args()
 
@@ -44,8 +46,21 @@ keyring = dns.tsigkeyring.from_text({
 })
 
 update = dns.update.Update(domain, keyring = keyring)
-update.replace(hostname, 300, 'A', options.ip_address)
+update.replace(hostname, 86400, 'A', options.ip_address)
 
+print "--- Updating Forward DNS Record"
 response = dns.query.tcp(update,options.dns_server)
 
 print "Output: %s" % response
+
+if options.reverse:
+    print "--- Updating Reverse DNS Record (PTR)"
+    domain = dns.reversename.from_address(options.ip_address) 
+    ptrdomain = re.search(r"([0-9]+).(.*).$", str(domain)).group(2)
+    full_ptrrecord = "%s." % options.fqdn
+    lastoctet = options.ip_address.split(".")[3] # Grab the last octet of the IP argument
+    update = dns.update.Update(ptrdomain, keyring = keyring)
+    update.replace(lastoctet, 86400, 'PTR', full_ptrrecord)
+    response = dns.query.tcp(update,options.dns_server)
+    print "Reverse Output: %s" % response
+
