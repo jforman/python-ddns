@@ -31,6 +31,9 @@ parser.add_option("--reverse", action="store_true", default=False,
 parser.add_option("--server", dest="dns_server",
                   help="DNS server to query.",
                   type="string")
+parser.add_option("--ttl",dest="ttl",
+                  help="Time to Live (in Seconds). Default: 86400",
+                  type="int",default=86400)
 
 (options, args) = parser.parse_args()
 
@@ -46,7 +49,7 @@ keyring = dns.tsigkeyring.from_text({
 })
 
 update = dns.update.Update(domain, keyring = keyring)
-update.replace(hostname, 86400, 'A', options.ip_address)
+update.replace(hostname, options.ttl, 'A', options.ip_address)
 
 print "--- Updating Forward DNS Record"
 response = dns.query.tcp(update,options.dns_server)
