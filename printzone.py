@@ -21,7 +21,14 @@ try:
     z = dns.zone.from_xfr(dns.query.xfr(options.dns_server, options.dns_zone))
     names = z.nodes.keys()
     names.sort()
+    zone_xfr_array = []
     for n in names:
-        print z[n].to_text(n)
+        current_record = z[n].to_text(n)
+        for split_record in current_record.split("\n"):
+            zone_xfr_array.append([split_record])
 except dns.exception.FormError:
     print "The transfer encountered a problem."
+
+for current_record in zone_xfr_array:
+    print current_record
+
