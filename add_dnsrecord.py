@@ -40,7 +40,7 @@ parser.add_option("--ttl",dest="ttl",
 hostname = re.search(r"(\w+).(.*)", options.fqdn).group(1)
 domain = re.search(r"(\w+).(.*)", options.fqdn).group(2)
 
-print "Host to be updated: %s, IP: %s, DNS Server: %s" % (options.fqdn, options.ip_address, options.dns_server)
+print "Host to be added/updated: %s, IP Address: %s, DNS Server: %s" % (options.fqdn, options.ip_address, options.dns_server)
 
 (algorithm, tsigsecret) = keyutils.read_tsigkey(options.key_file,options.key_name)
 
@@ -66,4 +66,3 @@ if options.reverse:
     update.replace(lastoctet, 86400, 'PTR', full_ptrrecord)
     response = dns.query.tcp(update,options.dns_server)
     print "Reverse Output: %s" % response
-
