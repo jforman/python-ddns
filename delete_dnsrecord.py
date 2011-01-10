@@ -33,12 +33,18 @@ parser.add_option("--server", dest="dns_server",
 hostname = re.search(r"(\w+).(.*)", options.fqdn).group(1)
 domain = re.search(r"(\w+).(.*)", options.fqdn).group(2)
 
+try:
+    fqdn_ip = socket.gethostbyaddr(options.dns_server)[2][0]
+except socket.gaierror, e:
+    print "There was an error resolving the DNS server %s. Did you specify the wrong DNS server? Exiting.\n" % (options.dns_server)
+    sys.exit(1)
+
 print "Host to be deleted: %s, DNS Server: %s" % (options.fqdn, options.dns_server)
 
 try:
     fqdn_ip = socket.gethostbyaddr(options.fqdn)[2][0]
 except socket.gaierror, e:
-    print "There was an error resolving the hostname to its IP: %s. Exiting.\n" % e
+    print "There was an error resolving your requested hostname to its IP: %s. Exiting.\n" % e
     sys.exit(1)
 
 print "DNS record resolves to: %s" % fqdn_ip
