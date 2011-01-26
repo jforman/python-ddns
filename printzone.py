@@ -10,7 +10,7 @@ import sys
 parser = OptionParser()
 parser.add_option("--server", dest="dns_server",
                   help="DNS server to query.",
-                  default = "foo",
+                  default = False,
                   type="string")
 parser.add_option("--zone", dest="dns_zone",
                   help="Zone to print.",
@@ -18,6 +18,10 @@ parser.add_option("--zone", dest="dns_zone",
                   type="string")
 
 (options, args) = parser.parse_args()
+
+if ((options.dns_server is False) or (options.dns_zone is False)):
+    print "You forgot to specify both a server and a DNS zone. Exiting.\n"
+    sys.exit(1)
 
 print "Server: %s Zone: %s" % (options.dns_server, options.dns_zone)
 try:
