@@ -1,24 +1,32 @@
 #!/usr/bin/env python
 
-import sys
+import dns.tsigkeyring
 import re
+import sys
 
-def read_tsigkey(tsigkeyfile, keyname):
+def read_tsigkey(tsig_key_file, key_name):
+    """Accept a TSIG keyfile and a key name to retrieve.
+    Return a keyring object with the key name and TSIG secret."""
+
     try:
-        keyfile = open(tsigkeyfile)
-        keystruct = keyfile.read()
-        keyfile.close()
+        key_file = open(tsig_key_file)
+        key_struct = key_file.read()
+        key_file.close()
     except IOError:
-        print "A problem was encountered opening your keyfile, %s." % tsigkeyfile
-        sys.exit(1)
+        print "A problem was encountered opening your keyfile, %s." % tsig_key_file
+        raise
 
     try:
-        keydata = re.search(r"key \"%s\" \{(.*?)\}\;" % keyname, keystruct, re.DOTALL).group(1)
-        
+        key_data = re.search(r"key \"%s\" \{(.*?)\}\;" % key_name, key_struct, re.DOTALL).group(1)
+        algorithm = re.search(r"algorithm ([a-zA-Z0-9_-]+?)\;", key_data, re.DOTALL).group(1)
+        tsig_secret = re.search(r"secret \"(.*?)\"", key_data, re.DOTALL).group(1)
     except AttributeError:
-        print "No key %s found." % keyname
-        sys.exit(1)
+        print "Unable to decipher the keyname and secret from your key file."
+        raise
 
-    algorithm = re.search(r"algorithm ([a-zA-Z0-9_-]+?)\;", keydata, re.DOTALL).group(1)
-    tsigsecret = re.search(r"secret \"(.*?)\"", keydata, re.DOTALL).group(1)
-    return (algorithm, tsigsecret)
+
+    keyring = dns.tsigkeyring.from_text({
+            key_name : tsig_secret
+    })
+
+    return keyring

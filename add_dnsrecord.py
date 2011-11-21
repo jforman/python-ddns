@@ -4,7 +4,6 @@
 
 import dns.query
 import dns.reversename
-import dns.tsigkeyring
 import dns.update
 import re
 import sys
@@ -43,13 +42,12 @@ def add_forward_record(hostname, domain, ip_address, ttl, dns_server, key_file, 
     """Add an A record to the specific DNS server
     with the provided hostname/IP/key information."""
 
-    (algorithm, tsigsecret) = keyutils.read_tsigkey(key_file, key_name)
+    try:
+        key_ring = keyutils.read_tsigkey(key_file, key_name)
+    except:
+        raise
 
-    keyring = dns.tsigkeyring.from_text({
-            key_name : tsigsecret
-    })
-
-    update = dns.update.Update(domain, keyring = keyring)
+    update = dns.update.Update(domain, keyring = key_ring)
     update.replace(hostname, ttl, 'A', ip_address)
     try:
         response = dns.query.tcp(update, dns_server)
@@ -66,18 +64,17 @@ def add_forward_record(hostname, domain, ip_address, ttl, dns_server, key_file, 
 
 
 def add_reverse_record(fqdn, domain, ip_address, ttl, dns_server, key_file, key_name):
+    """Add a reverse PTR record to the specific DNS server and zone."""
     reverse_fqdn = str(dns.reversename.from_address(ip_address))
     reverse_ip = re.search(r"([0-9]+).(.*).$", reverse_fqdn).group(1)
     reverse_domain = re.search(r"([0-9]+).(.*).$", reverse_fqdn).group(2)
 
+    try:
+        key_ring = keyutils.read_tsigkey(key_file, key_name)
+    except:
+        raise
 
-    (algorithm, tsigsecret) = keyutils.read_tsigkey(key_file, key_name)
-
-    keyring = dns.tsigkeyring.from_text({
-            key_name : tsigsecret
-    })
-
-    update = dns.update.Update(reverse_domain, keyring = keyring)
+    update = dns.update.Update(reverse_domain, keyring = key_ring)
     update.replace(reverse_ip, ttl, 'PTR', fqdn + ".")
     try:
         response = dns.query.tcp(update, dns_server)
