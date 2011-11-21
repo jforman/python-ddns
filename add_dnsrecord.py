@@ -53,7 +53,6 @@ def add_forward_record(hostname, domain, ip_address, ttl, dns_server, key_file, 
     update.replace(hostname, ttl, 'A', ip_address)
     try:
         response = dns.query.tcp(update, dns_server)
-        print "Output: %s" % response
     except dns.tsig.PeerBadKey:
         print "The remote DNS server %s did not accept the key passed." % dns_server
         raise
@@ -63,17 +62,14 @@ def add_forward_record(hostname, domain, ip_address, ttl, dns_server, key_file, 
         print "Unhandled exception in add_forward_record: %s" % err
         raise
 
-    return
+    print "Forward Record Output: %s" % response
 
 
 def add_reverse_record(fqdn, domain, ip_address, ttl, dns_server, key_file, key_name):
-    print "in add_reverse_record"
     reverse_fqdn = str(dns.reversename.from_address(ip_address))
-    print "Reverse fqdn: %s" % reverse_fqdn
     reverse_ip = re.search(r"([0-9]+).(.*).$", reverse_fqdn).group(1)
     reverse_domain = re.search(r"([0-9]+).(.*).$", reverse_fqdn).group(2)
 
-    print "reverse ip: %s, domain: %s" % (reverse_ip, reverse_domain)
 
     (algorithm, tsigsecret) = keyutils.read_tsigkey(key_file, key_name)
 
@@ -81,25 +77,38 @@ def add_reverse_record(fqdn, domain, ip_address, ttl, dns_server, key_file, key_
             key_name : tsigsecret
     })
 
-    print "in reverse, hostname: %s" % fqdn
     update = dns.update.Update(reverse_domain, keyring = keyring)
-    update.replace(reverse_ip, ttl, 'PTR', fqdn)
-    response = dns.query.tcp(update, dns_server)
+    update.replace(reverse_ip, ttl, 'PTR', fqdn + ".")
+    try:
+        response = dns.query.tcp(update, dns_server)
+    except Exception, err:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print "type: %s, obj: %s, tb: %s" % (exc_type, exc_obj, exc_tb)
+        print "Unhandled exception in add_forward_record: %s" % err
+        raise
 
-    print "reverse response: %s" % response
+    print "Reverse Record Output: %s" % response
+
 
 def main():
     options = parse_arguments()
     hostname = re.search(r"(\w+).(.*)", options.fqdn).group(1)
     domain = re.search(r"(\w+).(.*)", options.fqdn).group(2)
     print "Host to be added/updated: %s, IP Address: %s, DNS Server: %s" % (options.fqdn, options.ip_address, options.dns_server)
+    print "Attempting to add Forward DNS record."
     try:
         add_forward_record(hostname, domain, options.ip_address, options.ttl, options.dns_server, options.key_file, options.key_name)
     except:
         print "Exception in add_forward_record. Exiting."
         sys.exit(1)
 
-    add_reverse_record(options.fqdn, domain, options.ip_address, options.ttl, options.dns_server, options.key_file, options.key_name)
+    if options.reverse:
+        print "Attempting to add Reverse DNS record."
+        try:
+            add_reverse_record(options.fqdn, domain, options.ip_address, options.ttl, options.dns_server, options.key_file, options.key_name)
+        except:
+            print "Exception in add_reverse_record. Exiting."
+            sys.exit(1)
 
 
 if __name__ == "__main__":
