@@ -3,7 +3,7 @@
 import sys
 import re
 
-def read_tsigkey(tsigkeyfile,keyname):
+def read_tsigkey(tsigkeyfile, keyname):
     try:
         keyfile = open(tsigkeyfile)
         keystruct = keyfile.read()
