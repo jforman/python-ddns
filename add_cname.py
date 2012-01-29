@@ -40,14 +40,10 @@ orig_domain = re.search(r"(\w+).(.*)", options.orig).group(2)
 
 print "CNAME record to be added: %s, CNAME points to: %s, DNS Server: %s" % (options.orig, options.dest, options.dns_server)
 
-(algorithm, tsigsecret) = keyutils.read_tsigkey(options.key_file,options.key_name)
-
-keyring = dns.tsigkeyring.from_text({
-     'ddns-key' : tsigsecret
-})
+keyring = keyutils.read_tsigkey(options.key_file, options.key_name)
 
 update = dns.update.Update(orig_domain, keyring = keyring)
-update.replace(orig_hostname, options.ttl, 'CNAME', "%s." % options.dest)
+update.replace(orig_hostname, options.ttl, 'CNAME', options.dest + ".")
 
 print "--- Updating CNAME Record"
 response = dns.query.tcp(update,options.dns_server)
